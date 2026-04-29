@@ -3,9 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext.jsx';
-import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
-import { Layers, Database, Settings, Users, FileText, BarChart, Globe, Zap, Trash2 } from 'lucide-react';
+import { Layers, Database, Settings, Users, FileText, BarChart, Globe, Zap, Trash2, ArrowRight, LogOut } from 'lucide-react';
 
 const iconMap = {
   Layers,
@@ -55,80 +54,111 @@ const MyApps = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center text-textSecondary">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-text-secondary">Loading...</div>;
   }
 
   if (!isAuthenticated) return null;
 
   return (
-    <div className="container mx-auto px-4 py-6 pb-28 sm:py-8 sm:pb-24">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">My Apps</h1>
-          <p className="text-sm text-textSecondary">Manage your created apps and add new ones instantly.</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button onClick={() => navigate('/apps/new')} variant="secondary">New App</Button>
-          <div className="flex items-center gap-3">
-            <span className="text-textSecondary">{user.name}</span>
-            <Button onClick={logout}>Logout</Button>
+    <div className="min-h-screen bg-[#F8F9FB]">
+      {/* TOP NAVBAR */}
+      <div className="bg-white border-b border-[#E4E7EC] px-6 h-14 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
+            <Layers size={14} color="white" />
           </div>
+          <div className="text-[15px] font-semibold text-gray-900">AppGen</div>
+        </div>
+
+        <div className="flex items-center">
+          <div className="text-[13px] text-gray-500 mr-3">{user?.name}</div>
+          <details className="relative">
+            <summary className="list-none">
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-medium flex items-center justify-center">{(user?.name || 'PS').split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+            </summary>
+            <div className="absolute right-0 mt-2 w-40 rounded-md border border-[#E4E7EC] bg-white shadow-sm py-1">
+              <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                <LogOut size={14} /> Logout
+              </button>
+            </div>
+          </details>
         </div>
       </div>
-      {apps.length === 0 ? (
-        <div className="text-center py-16">
-          <Layers size={64} className="mx-auto text-textSecondary mb-4" />
-          <h2 className="text-2xl font-bold mb-4">No apps yet</h2>
-          <Link to="/apps/new">
-            <Button>Create your first app</Button>
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-6">
-          {apps.map(app => {
-            const IconComponent = iconMap[app.icon] || Layers;
-            let entityCount = 0;
-            try {
-              const parsed = JSON.parse(app.config || '{}');
-              entityCount = parsed.entities?.length || 0;
-            } catch {
-              entityCount = 0;
-            }
 
-            return (
-              <Card key={app.id} className="relative">
-                <button
-                  onClick={() => deleteApp(app.id)}
-                  className="absolute top-4 right-4 text-textSecondary hover:text-red-500"
-                >
-                  <Trash2 size={20} />
-                </button>
-                <div className="flex items-center mb-4">
-                  <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center mr-4"
-                    style={{ backgroundColor: app.color }}
-                  >
-                    <IconComponent size={24} color="white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold">{app.name}</h3>
-                    <p className="text-textSecondary text-sm">{app.description || 'No description'}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-4">
-                  <p className="text-sm text-textSecondary">Entities {entityCount}</p>
-                  <Button onClick={() => navigate(`/apps/${app.id}/dashboard`)} variant="secondary">
-                    Open
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Page header row */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Apps</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{apps.length} apps in your workspace</p>
+          </div>
+          <Button onClick={() => navigate('/apps/new')} variant="primary" className="px-4 py-2">
+            + New App
+          </Button>
         </div>
-      )}
-      <Link to="/apps/new" className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8">
-        <Button className="flex h-14 w-14 items-center justify-center rounded-full text-xl sm:h-16 sm:w-16">+</Button>
-      </Link>
+        {apps.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+              <Layers size={28} className="text-indigo-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">No apps yet</h3>
+            <p className="text-sm text-gray-400 max-w-xs mb-6">Create your first app and start building with config-driven architecture</p>
+            <Link to="/apps/new">
+              <Button variant="primary">+ Create your first app</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {apps.map(app => {
+              const IconComponent = iconMap[app.icon] || Layers;
+              let entityCount = 0;
+              try {
+                const parsed = JSON.parse(app.config || '{}');
+                entityCount = parsed.entities?.length || 0;
+              } catch {
+                entityCount = 0;
+              }
+
+              return (
+                <div
+                  key={app.id}
+                  className="bg-white rounded-xl border border-[#E4E7EC] p-5 cursor-pointer group hover:border-indigo-200 hover:shadow-[0_4px_20px_rgba(79,70,229,0.08)] transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: app.color }}>
+                        <IconComponent size={18} color="white" />
+                      </div>
+                      <div>
+                        <div className="text-[15px] font-semibold text-gray-900 leading-tight">{app.name}</div>
+                        <div className="text-xs text-gray-400 mt-0.5 max-w-[160px] truncate">{app.description || 'No description'}</div>
+                      </div>
+                    </div>
+
+                    <button onClick={() => deleteApp(app.id)} className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-lg flex items-center justify-center text-gray-300 hover:bg-red-50 hover:text-red-400 transition-all duration-150">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+
+                  <div className="border-t border-[#F3F4F6] mb-4" />
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 bg-[#F3F4F6] rounded-lg px-2.5 py-1.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                      <span className="text-xs font-medium text-gray-500">{entityCount} entities</span>
+                    </div>
+
+                    <button onClick={() => navigate(`/apps/${app.id}/dashboard`)} className="text-sm font-medium text-indigo-600 flex items-center gap-1.5 hover:gap-2.5 transition-all duration-150">
+                      Open
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

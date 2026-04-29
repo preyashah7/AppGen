@@ -85,15 +85,17 @@ const ConfigEditor = () => {
 
   return (
     <div className="space-y-6">
-      {/* Toolbar */}
-      <Card>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <FileText size={20} className="text-textSecondary" />
-            <span className="font-medium">config.json</span>
+      <Card className="overflow-hidden border-border/80">
+        <div className="flex flex-col gap-5 p-1 sm:flex-row sm:items-center sm:justify-between sm:p-0">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-accent">Config editor</p>
+            <div className="mt-2 flex items-center gap-3">
+              <FileText size={20} className="text-text-muted" />
+              <h1 className="text-xl font-semibold tracking-[-0.02em] text-text-primary">config.json</h1>
+            </div>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            <div className={`flex items-center gap-2 rounded-full px-3 py-1 text-xs sm:text-sm ${isValid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+            <div className={`inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-medium sm:text-sm ${isValid ? 'bg-success-light text-success' : 'bg-danger-light text-danger'}`}>
               {isValid ? <CheckCircle size={14} /> : <XCircle size={14} />}
               {isValid ? 'Valid JSON' : 'Invalid JSON'}
             </div>
@@ -115,12 +117,16 @@ const ConfigEditor = () => {
         </div>
       </Card>
 
-      {/* Editor and Preview */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {/* Editor */}
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold">Editor</h2>
-          <div className="h-[55vh] overflow-hidden rounded-lg border lg:h-[600px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="border-border/80">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-text-primary">Editor</h2>
+            <div className={`inline-flex items-center text-xs font-medium ${hasUnsavedChanges ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-600'} rounded-full px-2 py-0.5`}> 
+              {!hasUnsavedChanges && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5" />}
+              {hasUnsavedChanges ? 'Unsaved changes' : 'Saved'}
+            </div>
+          </div>
+          <div className="h-[55vh] overflow-hidden rounded-2xl border border-border bg-white lg:h-[620px]">
             <Editor
               height="100%"
               language="json"
@@ -140,43 +146,54 @@ const ConfigEditor = () => {
           </div>
         </Card>
 
-        {/* Preview */}
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold">Preview</h2>
+        <Card className="border-border/80">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold tracking-[-0.02em] text-text-primary">Preview</h2>
+            <span className="rounded-full bg-accent-light px-3 py-1 text-xs font-medium text-accent">Live summary</span>
+          </div>
           <div className="space-y-6">
             {preview ? (
               <>
                 <div>
-                  <h3 className="mb-2 font-medium text-textSecondary">Entities</h3>
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Entities</h3>
                   <div className="space-y-1">
                     {preview.entities.length > 0 ? (
                       preview.entities.map((entity, i) => (
-                        <div key={i} className="text-sm">{entity}</div>
+                        <div key={i} className="py-2.5 border-b border-gray-50 last:border-0 flex items-center justify-between">
+                          <span className="text-sm text-gray-700">{entity}</span>
+                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">{/* fields count already in text */}</span>
+                        </div>
                       ))
                     ) : (
-                      <div className="text-sm text-textSecondary">No entities configured</div>
+                      <div className="text-sm text-text-secondary">No entities configured</div>
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-2 font-medium text-textSecondary">Pages</h3>
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-5">Pages</h3>
                   <div className="space-y-1">
                     {preview.pages.length > 0 ? (
                       preview.pages.map((page, i) => (
-                        <div key={i} className="text-sm">{page}</div>
+                        <div key={i} className="py-2.5 border-b border-gray-50 last:border-0 flex items-center justify-between">
+                          <span className="text-sm text-gray-700">{page}</span>
+                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">&nbsp;</span>
+                        </div>
                       ))
                     ) : (
-                      <div className="text-sm text-textSecondary">No pages configured</div>
+                      <div className="text-sm text-text-secondary">No pages configured</div>
                     )}
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-2 font-medium text-textSecondary">Dashboard widgets</h3>
-                  <div className="text-sm">{preview.widgets} widgets configured</div>
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 mt-5">Dashboard widgets</h3>
+                  <div className="py-2.5 border-b border-gray-50 last:border-0 flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{preview.widgets} widgets configured</span>
+                    <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">&nbsp;</span>
+                  </div>
                 </div>
               </>
             ) : (
-              <div className="text-center text-red-500">Invalid JSON</div>
+              <div className="rounded-2xl border border-dashed border-danger/30 bg-danger-light px-4 py-12 text-center text-danger">Invalid JSON</div>
             )}
           </div>
         </Card>

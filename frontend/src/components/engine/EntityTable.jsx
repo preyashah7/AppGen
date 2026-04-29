@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -8,7 +8,7 @@ import Card from '../ui/Card.jsx';
 import Skeleton from '../ui/Skeleton.jsx';
 import EntityForm from './EntityForm.jsx';
 import CSVImportModal from '../CSVImportModal.jsx';
-import { Plus, FilePlus, Download } from 'lucide-react';
+import { Plus, FilePlus, Download, MoreHorizontal } from 'lucide-react';
 
 const formatValue = (value, type) => {
   if (value === undefined || value === null || value === '') return '—';
@@ -23,7 +23,7 @@ const badgeColor = (value) => {
   if (['done', 'active', 'served', 'completed'].includes(value)) return 'bg-emerald-100 text-emerald-700';
   if (['pending', 'in_progress', 'review'].includes(value)) return 'bg-sky-100 text-sky-700';
   if (['cancelled', 'inactive', 'critical', 'urgent'].includes(value)) return 'bg-rose-100 text-rose-700';
-  return 'bg-gray-100 text-textSecondary';
+  return 'bg-surface-raised text-text-secondary';
 };
 
 const EntityTable = () => {
@@ -38,6 +38,8 @@ const EntityTable = () => {
   const [editingRecord, setEditingRecord] = useState(null);
   const [error, setError] = useState('');
   const [isImportModalOpen, setImportModalOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsRef = useRef(null);
 
   const pageConfig = config?.pages?.find((page) => page.entity === entityName);
   const entity = config?.entities?.find((item) => item.name === entityName);
@@ -105,6 +107,18 @@ const EntityTable = () => {
     }
   };
 
+  // Close small-screen actions menu on outside click
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!actionsRef.current) return;
+      if (!actionsRef.current.contains(e.target)) {
+        setActionsOpen(false);
+      }
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, []);
+
   const handleDelete = async (recordId) => {
     if (!confirm('Delete this record?')) return;
     try {
@@ -140,31 +154,93 @@ const EntityTable = () => {
 
   if (!entity || !pageConfig) {
     return (
-      <Card>
-        <div className="space-y-3 text-center py-16">
-          <h2 className="text-xl font-semibold">Entity '{entityName}' not found in config</h2>
-          <p className="text-textSecondary">Check your app configuration or return to the dashboard.</p>
+      <Card className="border-border/80">
+        <div className="space-y-3 py-16 text-center">
+          <h2 className="text-xl font-semibold tracking-[-0.02em] text-text-primary">Entity '{entityName}' not found in config</h2>
+          <p className="text-text-secondary">Check your app configuration or return to the dashboard.</p>
         </div>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{pageTitle}</h1>
-            <p className="text-sm text-textSecondary">{filteredRecords.length} records</p>
+    <div className="p-6 max-w-[1400px] mx-auto">
+      <Card className="bg-white rounded-xl border border-[#E4E7EC] shadow-[0_1px_3px_rgba(0,0,0,0.06)] overflow-hidden">
+        {/* TOOLBAR */}
+        <div className="px-5 py-4 border-b border-[#E4E7EC]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-semibold text-gray-900">{pageTitle}</h2>
+              <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filteredRecords.length} records</span>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 flex-shrink-0 relative z-10">
+              {createAllowed && (
+                <Button onClick={openCreate} variant="primary" className="flex items-center gap-1.5 px-4 py-1.5 text-sm font-medium">
+                  <Plus size={14} />
+                  Create
+                </Button>
+              )}
+              <Button onClick={downloadCSV} variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium">
+                <Download size={13} />
+                Export
+              </Button>
+              <Button onClick={() => setImportModalOpen(true)} variant="secondary" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium">
+                <FilePlus size={13} />
+                Import
+              </Button>
+            </div>
+
+            {/* Small screen overflow menu */}
+            <div className="sm:hidden relative" ref={actionsRef}>
+              <button
+                onClick={() => setActionsOpen((s) => !s)}
+                aria-label="Actions"
+                className="w-9 h-9 inline-flex items-center justify-center rounded-md border border-[#E4E7EC] bg-white text-gray-600 hover:bg-gray-50"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+
+              {actionsOpen && (
+                <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg border border-[#E4E7EC] z-20">
+                  <div className="flex flex-col p-2">
+                    {createAllowed && (
+                      <button
+                        onClick={() => { openCreate(); setActionsOpen(false); }}
+                        className="text-sm text-left px-3 py-2 rounded hover:bg-gray-50"
+                      >
+                        Create
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { downloadCSV(); setActionsOpen(false); }}
+                      className="text-sm text-left px-3 py-2 rounded hover:bg-gray-50"
+                    >
+                      Export
+                    </button>
+                    <button
+                      onClick={() => { setImportModalOpen(true); setActionsOpen(false); }}
+                      className="text-sm text-left px-3 py-2 rounded hover:bg-gray-50"
+                    >
+                      Import
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t('search')}
-              className="w-full rounded-2xl border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-[200px]"
-            />
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-3 h-8 text-sm border border-[#E4E7EC] rounded-lg bg-[#F8F9FB] text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 focus:bg-white transition-all duration-150"
+              />
+            </div>
+
             {filters.map((field) => {
               const fieldDef = entityFields.find((item) => item.name === field);
               const options = fieldDef?.options
@@ -175,7 +251,7 @@ const EntityTable = () => {
                   key={field}
                   value={filterValues[field] || ''}
                   onChange={(e) => setFilterValues({ ...filterValues, [field]: e.target.value })}
-                  className="w-full rounded-2xl border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-[150px]"
+                  className="h-8 px-3 pr-7 text-sm border border-[#E4E7EC] rounded-lg bg-white text-gray-600 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all duration-150 min-w-[120px]"
                 >
                   <option value="">All {fieldLabel(field)}</option>
                   {options.map((option, idx) => {
@@ -191,79 +267,78 @@ const EntityTable = () => {
                 </select>
               );
             })}
-            {createAllowed && (
-              <Button onClick={openCreate} variant="primary" className="w-full sm:w-auto">
-                <Plus size={16} className="mr-2" /> Create
-              </Button>
+
+            {Object.values(filterValues).some(Boolean) && (
+              <button onClick={() => setFilterValues({})} className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors duration-150">
+                {Object.values(filterValues).filter(Boolean).length} filters
+              </button>
             )}
-            <Button onClick={downloadCSV} variant="secondary" className="w-full sm:w-auto">
-              <Download size={16} className="mr-2" /> Export
-            </Button>
-            <Button onClick={() => setImportModalOpen(true)} variant="secondary" className="w-full sm:w-auto">
-              <FilePlus size={16} className="mr-2" /> Import CSV
-            </Button>
           </div>
         </div>
-      </Card>
 
-      <Card>
-        {loading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex space-x-4">
-                {columns.map((column) => (
-                  <Skeleton key={column} width="100%" height="2rem" className="flex-1" />
-                ))}
-                <Skeleton width="80px" height="2rem" />
-              </div>
-            ))}
-          </div>
-        ) : filteredRecords.length === 0 ? (
-          <div className="space-y-4 py-16 text-center">
-            <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 text-2xl">📭</div>
-            <h2 className="text-xl font-semibold">No {entity.display_name} yet</h2>
-            {createAllowed && (
-              <Button onClick={openCreate}>Create your first one</Button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto -mx-6 sm:mx-0">
-            <div className="inline-block min-w-full px-6 sm:px-0">
-            <table className="min-w-full divide-y divide-border text-left text-sm">
-              <thead className="bg-gray-50">
-                <tr>
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="space-y-4 p-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex space-x-4">
                   {columns.map((column) => (
-                    <th key={column} className="px-4 py-3 font-medium text-textSecondary">{fieldLabel(column)}</th>
+                    <Skeleton key={column} width="100%" height="2rem" className="flex-1" />
                   ))}
-                  <th className="px-4 py-3 font-medium text-textSecondary">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
-                    {columns.map((column) => {
-                      const fieldDef = entityFields.find((field) => field.name === column);
-                      const value = record.data?.[column];
-                      const display = fieldDef?.type === 'select' ? (
-                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${badgeColor(value)}`}>{value}</span>
-                      ) : (
-                        formatValue(value, fieldDef?.type)
-                      );
-                      return <td key={column} className="px-4 py-3 align-top">{display}</td>;
-                    })}
-                    <td className="px-4 py-3 align-top">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
-                        <button className="w-full rounded-2xl border border-border px-2 py-2 text-xs sm:w-auto sm:px-3 sm:text-sm hover:bg-gray-50" onClick={() => openEdit(record)}>Edit</button>
-                        <button className="w-full rounded-2xl border border-border px-2 py-2 text-xs text-rose-600 sm:w-auto sm:px-3 sm:text-sm hover:bg-rose-50" onClick={() => handleDelete(record.id)}>Delete</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                  <Skeleton width="80px" height="2rem" />
+                </div>
+              ))}
             </div>
-          </div>
-        )}
+          ) : filteredRecords.length === 0 ? (
+            <div className="space-y-4 py-16 text-center">
+              <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-2xl">📭</div>
+              <h2 className="text-xl font-semibold text-gray-700">No {entity.display_name} yet</h2>
+              {createAllowed && <Button onClick={openCreate}>Create your first one</Button>}
+            </div>
+          ) : (
+            <div className="-mx-6 sm:mx-0">
+              <div className="inline-block min-w-full px-6 sm:px-0">
+                <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
+                  <thead>
+                    <tr className="bg-[#F8F9FB] border-b border-[#E4E7EC]">
+                      {columns.map((column) => (
+                        <th key={column} className="px-4 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-[0.06em] whitespace-nowrap">{fieldLabel(column)}</th>
+                      ))}
+                      <th className="px-4 py-2.5 w-16" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F3F4F6]">
+                    {filteredRecords.map((record) => (
+                      <tr key={record.id} className="group hover:bg-[#F8F9FB] transition-colors duration-100">
+                        {columns.map((column) => {
+                          const fieldDef = entityFields.find((field) => field.name === column);
+                          const value = record.data?.[column];
+                          const display = fieldDef?.type === 'select' ? (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium ${badgeColor(value)}`}>{value}</span>
+                          ) : (
+                            <span className="text-sm text-gray-700 truncate max-w-[220px]">{formatValue(value, fieldDef?.type)}</span>
+                          );
+                          return <td key={column} className="px-4 py-3 text-sm text-gray-700 max-w-[220px]">{display}</td>;
+                        })}
+
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 justify-end">
+                            <button className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:bg-indigo-50 hover:text-indigo-500 transition-all duration-150" onClick={() => openEdit(record)}>
+                              <Plus size={13} />
+                            </button>
+                            <button className="w-7 h-7 rounded-md flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-400 transition-all duration-150" onClick={() => handleDelete(record.id)}>
+                              <FilePlus size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
       </Card>
 
       <EntityForm
@@ -282,7 +357,7 @@ const EntityTable = () => {
         entityName={entityName}
         onImportComplete={refreshRecords}
       />
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 };

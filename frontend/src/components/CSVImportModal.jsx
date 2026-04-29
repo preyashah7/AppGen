@@ -139,17 +139,17 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Upload CSV File</h3>
-        <p className="text-sm text-textSecondary">
+        <h3 className="mb-2 text-lg font-semibold tracking-[-0.02em] text-text-primary">Upload CSV File</h3>
+        <p className="text-sm text-text-secondary">
           Select a CSV file to import records into {entity?.display_name || entityName}.
         </p>
       </div>
 
-      <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-8 text-center">
-        <Upload className="mx-auto h-10 sm:h-12 w-10 sm:w-12 text-gray-400 mb-4" />
+      <div className="relative rounded-3xl border-2 border-dashed border-border bg-surface-raised p-4 text-center sm:p-8">
+        <Upload className="mx-auto mb-4 h-10 w-10 text-text-muted sm:h-12 sm:w-12" />
         <div className="space-y-2">
-          <p className="text-xs sm:text-sm font-medium">Drop your CSV file here, or click to browse</p>
-          <p className="text-xs text-textSecondary">Only CSV files are supported</p>
+          <p className="text-xs font-medium sm:text-sm text-text-primary">Drop your CSV file here, or click to browse</p>
+          <p className="text-xs text-text-secondary">Only CSV files are supported</p>
         </div>
         <input
           ref={fileInputRef}
@@ -161,16 +161,16 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
       </div>
 
       {file && (
-        <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
-          <CheckCircle className="h-5 w-5 text-green-600" />
-          <span className="text-sm text-green-700">{file.name} selected</span>
+        <div className="flex items-center gap-2 rounded-2xl border border-success/20 bg-success-light px-3 py-3">
+          <CheckCircle className="h-5 w-5 text-success" />
+          <span className="text-sm text-success">{file.name} selected</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center space-x-2 p-3 bg-red-50 rounded-lg">
-          <XCircle className="h-5 w-5 text-red-600" />
-          <span className="text-sm text-red-700">{error}</span>
+        <div className="flex items-center gap-2 rounded-2xl border border-danger/20 bg-danger-light px-3 py-3">
+          <XCircle className="h-5 w-5 text-danger" />
+          <span className="text-sm text-danger">{error}</span>
         </div>
       )}
     </div>
@@ -179,8 +179,8 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Map Columns</h3>
-        <p className="text-sm text-textSecondary">
+        <h3 className="mb-2 text-lg font-semibold tracking-[-0.02em] text-text-primary">Map Columns</h3>
+        <p className="text-sm text-text-secondary">
           Map your CSV columns to {entity?.display_name || entityName} fields.
         </p>
       </div>
@@ -189,13 +189,13 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
         {headers.map((header) => (
           <div key={header} className="flex items-center space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-textSecondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 CSV Column: {header}
               </label>
               <select
                 value={columnMapping[header] || ''}
                 onChange={(e) => handleMappingChange(header, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
               >
                 <option value="">Don't import</option>
                 {entityFields.map((field) => (
@@ -209,14 +209,14 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
         ))}
       </div>
 
-      <Card className="p-4">
-        <h4 className="font-medium mb-2">Preview (first 3 rows)</h4>
+      <Card className="border-border/80 p-4">
+        <h4 className="mb-2 font-medium text-text-primary">Preview (first 3 rows)</h4>
         <div className="overflow-x-auto">
           <table className="min-w-full text-xs">
             <thead>
               <tr>
                 {headers.map((header) => (
-                  <th key={header} className="px-2 py-1 text-left font-medium">
+                  <th key={header} className="px-2 py-2 text-left font-medium text-text-secondary">
                     {header}
                   </th>
                 ))}
@@ -226,7 +226,7 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
               {parsedData.slice(0, 3).map((row, i) => (
                 <tr key={i}>
                   {headers.map((header) => (
-                    <td key={header} className="px-2 py-1 border-t">
+                    <td key={header} className="border-t border-border px-2 py-2 text-text-primary">
                       {row[header] || '—'}
                     </td>
                   ))}
@@ -244,30 +244,30 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
       <div className="text-center">
         {importResult?.success ? (
           <div className="space-y-4">
-            <CheckCircle className="mx-auto h-16 w-16 text-green-600" />
-            <h3 className="text-xl font-semibold text-green-700">Import Successful!</h3>
-            <p className="text-textSecondary">
+            <CheckCircle className="mx-auto h-16 w-16 text-success" />
+            <h3 className="text-xl font-semibold text-success">Import Successful!</h3>
+            <p className="text-text-secondary">
               Successfully imported {importResult.imported} records.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            <XCircle className="mx-auto h-16 w-16 text-red-600" />
-            <h3 className="text-xl font-semibold text-red-700">Import Failed</h3>
-            <p className="text-textSecondary">{importResult?.error}</p>
+            <XCircle className="mx-auto h-16 w-16 text-danger" />
+            <h3 className="text-xl font-semibold text-danger">Import Failed</h3>
+            <p className="text-text-secondary">{importResult?.error}</p>
           </div>
         )}
       </div>
 
       {importResult?.errors && importResult.errors.length > 0 && (
-        <Card className="p-4">
-          <h4 className="font-medium mb-2 flex items-center">
-            <AlertCircle className="h-4 w-4 mr-2 text-amber-600" />
+        <Card className="border-border/80 p-4">
+          <h4 className="mb-2 flex items-center font-medium text-text-primary">
+            <AlertCircle className="mr-2 h-4 w-4 text-warning" />
             Import Errors
           </h4>
           <div className="space-y-2 max-h-32 overflow-y-auto">
             {importResult.errors.map((error, i) => (
-              <div key={i} className="text-sm text-red-700">
+              <div key={i} className="text-sm text-danger">
                 Row {error.row}: {error.message}
               </div>
             ))}
@@ -298,7 +298,7 @@ const CSVImportModal = ({ isOpen, onClose, entityName, onImportComplete }) => {
         {getStepContent()}
       </div>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 sm:gap-3 pt-6 border-t">
+      <div className="flex flex-col-reverse gap-2 border-t border-border pt-6 sm:flex-row sm:justify-between sm:gap-3">
         <Button
           variant="secondary"
           onClick={step === 1 ? handleClose : () => setStep(step - 1)}

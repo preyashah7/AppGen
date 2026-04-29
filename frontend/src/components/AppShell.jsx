@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { Layers, LayoutDashboard, List, Settings, Bell, ArrowLeft, ChevronLeft, Menu } from 'lucide-react';
+import { Layers, LayoutDashboard, List, Settings, Bell, ArrowLeft, Menu, ChevronDown, Check } from 'lucide-react';
 
 const iconMap = {
   Layers,
@@ -22,6 +22,9 @@ const AppShell = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const languageMenuRef = useRef(null);
+  const availableLanguages = Object.keys(config?.localization || {});
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 767px)');
@@ -47,6 +50,17 @@ const AppShell = () => {
     }
   }, [location.pathname, isMobile]);
 
+  useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) {
+        setLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
   const settings = config?.settings || {};
   const entities = config?.entities || [];
 
@@ -65,7 +79,7 @@ const AppShell = () => {
 
   if (isLoadingConfig) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-textSecondary">
+      <div className="min-h-screen flex items-center justify-center bg-background text-text-secondary">
         {t('loading')}
       </div>
     );
@@ -73,7 +87,7 @@ const AppShell = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-textSecondary">
+      <div className="min-h-screen flex items-center justify-center bg-background text-text-secondary">
         {error}
       </div>
     );
@@ -81,66 +95,97 @@ const AppShell = () => {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-textPrimary">
-      <div className="sticky top-0 z-50 flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-border bg-white/95 px-3 py-3 shadow-sm backdrop-blur sm:h-14 sm:flex-nowrap sm:px-4">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border bg-surface px-6 shadow-sm">
+        <div className="flex items-center gap-3">
           <button
-            className="text-textSecondary hover:text-primary"
+            className="text-text-secondary hover:text-text-primary p-1"
             onClick={() => (isMobile ? setMobileSidebarOpen((open) => !open) : setSidebarOpen((open) => !open))}
+            aria-label="Toggle sidebar"
           >
-            <Menu size={20} />
+            <Menu size={20} className="text-text-muted" />
           </button>
-          <h2 className="truncate text-base font-semibold sm:text-lg">{pageTitle()}</h2>
+          <h2 className="text-base font-semibold text-text-primary">{pageTitle()}</h2>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          {Object.keys(config?.localization || {}).length > 1 && (
-            <select
-              value={currentLanguage}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="max-w-[6.5rem] rounded-lg border border-border bg-white px-2 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 sm:max-w-none sm:px-3"
-            >
-              {Object.keys(config.localization).map((lang) => (
-                <option key={lang} value={lang}>{lang.toUpperCase()}</option>
-              ))}
-            </select>
+
+        <div className="flex items-center gap-3">
+          {availableLanguages.length > 1 && (
+            <div className="relative" ref={languageMenuRef}>
+              <button
+                type="button"
+                onClick={() => setLanguageMenuOpen((open) => !open)}
+                className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary"
+                aria-haspopup="menu"
+                aria-expanded={languageMenuOpen}
+              >
+                <span>{currentLanguage?.toUpperCase() || 'EN'}</span>
+                <ChevronDown size={14} />
+              </button>
+              {languageMenuOpen && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-2xl border border-border bg-surface p-2 shadow-dropdown">
+                  {availableLanguages.map((languageCode) => (
+                    <button
+                      key={languageCode}
+                      type="button"
+                      onClick={() => {
+                        setLanguage(languageCode);
+                        setLanguageMenuOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-surface-raised ${currentLanguage === languageCode ? 'text-accent' : 'text-text-secondary hover:text-text-primary'}`}
+                    >
+                      <span className="uppercase tracking-[0.16em]">{languageCode}</span>
+                      {currentLanguage === languageCode && <Check size={14} />}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
+
           <button
-            className="relative rounded-lg bg-white border border-border px-3 py-2 hover:border-primary"
+            className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-surface hover:bg-surface-raised"
             onClick={() => navigate(`/apps/${appId}/notifications`)}
+            aria-label="Notifications"
           >
-            <Bell size={18} />
+            <Bell size={16} className="text-text-secondary" />
             {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary text-[10px] text-white">
+              <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[10px] font-medium">
                 {unreadCount}
               </span>
             )}
           </button>
+
           <div className="relative">
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white"
+              className="flex w-9 h-9 items-center justify-center rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover transform transition duration-150 hover:scale-105"
               onClick={() => setMenuOpen((open) => !open)}
+              aria-label="User menu"
             >
               {user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
             </button>
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-2xl border border-border bg-white p-2 shadow-lg">
-                <button
-                  className="w-full rounded-xl px-3 py-2 text-left text-sm text-textPrimary hover:bg-gray-50"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigate('/apps');
-                  }}
-                >
-                  Back to Apps
-                </button>
-                <button
-                  className="w-full rounded-xl px-3 py-2 text-left text-sm text-textPrimary hover:bg-gray-50"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    logout();
-                  }}
-                >
-                  Logout
-                </button>
+              <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-surface shadow-dropdown p-2">
+                <div className="py-1">
+                  <button
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-raised hover:text-text-primary"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      navigate('/apps');
+                    }}
+                  >
+                    Back to Apps
+                  </button>
+                </div>
+                <div className="py-1">
+                  <button
+                    className="w-full text-left rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-raised hover:text-text-primary"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    Logout
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -158,24 +203,29 @@ const AppShell = () => {
         <aside
           className={`border-r border-border bg-white transition-transform duration-300 ${isMobile ? `fixed inset-y-14 left-0 z-40 flex h-[calc(100dvh-3.5rem)] w-72 max-w-[85vw] flex-col overflow-hidden shadow-2xl ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}` : `fixed inset-y-14 left-0 z-40 flex h-[calc(100dvh-3.5rem)] w-72 flex-col overflow-hidden shadow-xl ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}`}
         >
-          <div className="flex h-20 items-center gap-3 border-b border-border px-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white">
-              {iconMap[settings.icon] ? React.createElement(iconMap[settings.icon]) : <Layers size={20} />}
+          <div className="px-3 py-4 border-b border-border flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: settings.color || '#6366F1' }}>
+              {iconMap[settings.icon] ? React.createElement(iconMap[settings.icon], { size: 18, className: 'text-white' }) : <Layers size={18} className="text-white" />}
             </div>
             {(!isMobile || isMobileSidebarOpen) && (
               <div>
-                <div className="text-sm font-semibold">{settings.app_name || 'App'}</div>
-                <div className="text-xs text-textSecondary">{settings.theme || 'Platform'}</div>
+                <div className="text-sm font-semibold text-text-primary">{settings.app_name || 'App'}</div>
+                <div className="text-xs text-text-muted mt-0.5">{settings.theme || 'Platform'}</div>
               </div>
             )}
           </div>
-          <nav className="flex-1 space-y-1 overflow-y-auto p-2">
+
+          <div className="px-3 pt-4">
+            <div className="text-[10px] font-semibold tracking-widest text-text-muted px-3 pb-2 uppercase">Menu</div>
+          </div>
+
+          <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-2">
             <NavLink
               to={`/apps/${appId}/dashboard`}
-              className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-2 text-sm ${isActive ? 'bg-primary/10 text-primary' : 'text-textSecondary hover:bg-gray-50'}`}
+              className={({ isActive }) => `flex h-9 items-center gap-3 px-3 text-sm rounded-lg ${isActive ? 'bg-accent-light text-accent font-medium border-l-2 border-accent' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'}`}
             >
-              <LayoutDashboard size={18} />
-              {(!isMobile || isMobileSidebarOpen) && t('dashboard')}
+              <LayoutDashboard size={16} className={"text-text-muted"} />
+              {(!isMobile || isMobileSidebarOpen) && <span className="truncate">{t('dashboard')}</span>}
             </NavLink>
             {entities.map((entity) => {
               const IconComponent = iconMap[entity.icon] || List;
@@ -183,41 +233,44 @@ const AppShell = () => {
                 <NavLink
                   key={entity.name}
                   to={`/apps/${appId}/entity/${entity.name}`}
-                  className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-2 text-sm ${isActive ? 'bg-primary/10 text-primary' : 'text-textSecondary hover:bg-gray-50'}`}
+                  className={({ isActive }) => `flex h-9 items-center gap-3 px-3 text-sm rounded-lg ${isActive ? 'bg-accent-light text-accent font-medium border-l-2 border-accent' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'}`}
                 >
-                  <IconComponent size={18} />
-                  {(!isMobile || isMobileSidebarOpen) && entity.display_name}
+                  <IconComponent size={16} className={"text-text-muted"} />
+                  {(!isMobile || isMobileSidebarOpen) && <span className="truncate">{entity.display_name}</span>}
                 </NavLink>
               );
             })}
-            <div className="border-t border-border pt-3" />
+
+            <div className="my-3 border-t border-border" />
+
             <NavLink
               to={`/apps/${appId}/config`}
-              className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-2 text-sm ${isActive ? 'bg-primary/10 text-primary' : 'text-textSecondary hover:bg-gray-50'}`}
+              className={({ isActive }) => `flex h-9 items-center gap-3 px-3 text-sm rounded-lg ${isActive ? 'bg-accent-light text-accent font-medium border-l-2 border-accent' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'}`}
             >
-              <Settings size={18} />
-              {(!isMobile || isMobileSidebarOpen) && t('config_editor')}
+              <Settings size={16} className={"text-text-muted"} />
+              {(!isMobile || isMobileSidebarOpen) && <span className="truncate">{t('config_editor')}</span>}
             </NavLink>
+
             <NavLink
               to={`/apps/${appId}/notifications`}
-              className={({ isActive }) => `flex items-center gap-3 rounded-2xl px-3 py-2 text-sm ${isActive ? 'bg-primary/10 text-primary' : 'text-textSecondary hover:bg-gray-50'}`}
+              className={({ isActive }) => `flex h-9 items-center gap-3 px-3 text-sm rounded-lg ${isActive ? 'bg-accent-light text-accent font-medium border-l-2 border-accent' : 'text-text-secondary hover:bg-surface-raised hover:text-text-primary'}`}
             >
-              <Bell size={18} />
-              {(!isMobile || isMobileSidebarOpen) && t('notifications')}
+              <Bell size={16} className={"text-text-muted"} />
+              {(!isMobile || isMobileSidebarOpen) && <span className="truncate">{t('notifications')}</span>}
               {unreadCount > 0 && !isMobile && isSidebarOpen && (
-                <span className="ml-auto inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                <span className="ml-auto inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-white text-[10px] font-medium">
                   {unreadCount}
                 </span>
               )}
             </NavLink>
           </nav>
           {(!isMobile || isMobileSidebarOpen) && (
-            <div className="mt-auto p-4">
+            <div className="mt-auto px-2 py-3 border-t border-border">
               <button
-                className="flex w-full items-center gap-2 rounded-2xl border border-border bg-white px-3 py-2 text-sm text-textPrimary hover:bg-gray-50"
+                className="flex w-full items-center gap-2 h-9 rounded-lg px-3 text-sm text-text-secondary hover:text-text-primary hover:bg-surface-raised"
                 onClick={() => navigate('/apps')}
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={16} className="text-text-muted" />
                 Back to My Apps
               </button>
             </div>

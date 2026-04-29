@@ -54,12 +54,12 @@ const GitHubExportModal = ({ appId, config, onClose }) => {
       }
     >
       <div className="space-y-6">
-        <p className="text-sm text-textSecondary">
+        <p className="text-sm text-text-secondary">
           Push your app config to a GitHub repository. This will create or update the config.json file in your repo.
         </p>
 
         {result && (
-          <div className={`rounded-lg p-4 ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+          <div className={`rounded-2xl border p-4 ${result.success ? 'border-success/20 bg-success-light text-success' : 'border-danger/20 bg-danger-light text-danger'}`}>
             {result.success ? (
               <div>
                 <div className="flex items-center gap-2 font-medium">
@@ -101,7 +101,7 @@ const GitHubExportModal = ({ appId, config, onClose }) => {
             placeholder="my-app-config"
           />
           <div>
-            <label className="block text-sm font-medium text-textPrimary mb-2">
+            <label className="mb-2 block text-sm font-medium text-text-primary">
               Personal Access Token
             </label>
             <input
@@ -110,12 +110,12 @@ const GitHubExportModal = ({ appId, config, onClose }) => {
               onChange={(e) => setForm({ ...form, token: e.target.value })}
               required
               placeholder="ghp_..."
-              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
             />
             <button
               type="button"
               onClick={handleTokenHelp}
-              className="mt-1 text-xs text-primary hover:underline"
+              className="mt-1 text-xs text-accent hover:underline"
             >
               How to get a token ↗
             </button>

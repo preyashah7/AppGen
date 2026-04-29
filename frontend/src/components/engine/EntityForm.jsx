@@ -95,7 +95,7 @@ const EntityForm = ({ entityName, initialData, open, onClose, onSuccess }) => {
       <div className="space-y-5 pr-1 sm:pr-2">
         {entity.fields.map((field) => (
           <div key={field.name} className="space-y-2">
-            <label className="block text-sm font-medium text-textPrimary">
+            <label className="block text-sm font-medium text-text-primary">
               {field.label}{field.required && <span className="text-rose-500">*</span>}
             </label>
             {field.type === 'textarea' ? (
@@ -103,14 +103,14 @@ const EntityForm = ({ entityName, initialData, open, onClose, onSuccess }) => {
                 value={values[field.name] ?? ''}
                 onChange={(e) => handleChange(field.name, e.target.value)}
                 placeholder={field.placeholder || ''}
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition-all placeholder:text-text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
                 rows={4}
               />
             ) : field.type === 'select' ? (
               <select
                 value={values[field.name] ?? ''}
                 onChange={(e) => handleChange(field.name, e.target.value)}
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition-all focus:border-accent focus:ring-2 focus:ring-accent/20"
               >
                 <option value="">Select {field.label}</option>
                 {(field.options || []).map((option) => (
@@ -118,14 +118,14 @@ const EntityForm = ({ entityName, initialData, open, onClose, onSuccess }) => {
                 ))}
               </select>
             ) : field.type === 'checkbox' ? (
-              <label className="inline-flex items-center gap-2">
+              <label className="inline-flex items-center gap-2 rounded-2xl border border-border bg-surface-raised px-4 py-3">
                 <input
                   type="checkbox"
                   checked={Boolean(values[field.name])}
                   onChange={(e) => handleChange(field.name, e.target.checked)}
-                  className="h-4 w-4 rounded border border-border text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border border-border text-accent focus:ring-accent"
                 />
-                <span className="text-sm text-textSecondary">{field.placeholder || ''}</span>
+                <span className="text-sm text-text-secondary">{field.placeholder || ''}</span>
               </label>
             ) : (
               <input
@@ -133,13 +133,13 @@ const EntityForm = ({ entityName, initialData, open, onClose, onSuccess }) => {
                 value={values[field.name] ?? ''}
                 onChange={(e) => handleChange(field.name, e.target.value)}
                 placeholder={field.placeholder || ''}
-                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-sm text-text-primary outline-none transition-all placeholder:text-text-muted focus:border-accent focus:ring-2 focus:ring-accent/20"
               />
             )}
-            {errors[field.name] && <p className="text-sm text-rose-600">{errors[field.name]}</p>}
+            {errors[field.name] && <p className="text-sm text-danger">{errors[field.name]}</p>}
           </div>
         ))}
-        {submitError && <p className="text-sm text-rose-600">{submitError}</p>}
+        {submitError && <p className="rounded-lg border border-danger/20 bg-danger-light px-3 py-2 text-sm text-danger">{submitError}</p>}
       </div>
     </Modal>
   );

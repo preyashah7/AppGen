@@ -19,7 +19,25 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-background font-sans">
-          <Toaster position="top-right" duration={3000} />
+          <Toaster
+            position="top-right"
+            duration={3000}
+            toastOptions={{
+              className: 'rounded-2xl border border-border bg-white text-text-primary shadow-[0_16px_40px_rgba(15,23,42,0.12)]',
+              success: {
+                iconTheme: {
+                  primary: '#2563eb',
+                  secondary: '#ffffff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#dc2626',
+                  secondary: '#ffffff',
+                },
+              },
+            }}
+          />
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />

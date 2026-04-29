@@ -55,33 +55,36 @@ const NotificationsPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">{t('notifications')}</h1>
-          <p className="text-sm text-textSecondary">All activity for this app.</p>
+      <div className="rounded-[28px] border border-border bg-[linear-gradient(135deg,#FFFFFF_0%,#EEF2FF_100%)] p-6 shadow-card sm:p-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">Activity feed</p>
+            <h1 className="text-3xl font-semibold tracking-[-0.03em] text-text-primary">Notifications</h1>
+            <p className="mt-3 text-sm leading-6 text-text-secondary">All activity for this app in one place.</p>
+          </div>
+          <Button onClick={markAllRead} variant="secondary">Mark all read</Button>
         </div>
-        <Button onClick={markAllRead} variant="secondary">Mark all read</Button>
       </div>
       {loading ? (
-        <Card><div className="py-16 text-center text-textSecondary">{t('loading')}</div></Card>
+        <Card className="border-border/80"><div className="py-16 text-center text-text-secondary">{t('loading')}</div></Card>
       ) : notifications.length === 0 ? (
-        <Card><div className="py-16 text-center text-textSecondary">No notifications yet</div></Card>
+        <Card className="border-border/80"><div className="py-16 text-center text-text-secondary">No notifications yet</div></Card>
       ) : (
         <div className="space-y-4">
           {notifications.map((notification) => {
             const Icon = iconMap[notification.type] || Bell;
             return (
-              <Card key={notification.id} className={`${notification.read ? 'bg-white' : 'bg-primary/5'}`}>
+              <Card key={notification.id} className={`${notification.read ? 'bg-white' : 'bg-accent-light/60'} border-border/80`}>
                 <div className="flex items-start gap-4">
-                  <div className="rounded-2xl bg-white p-3 text-primary shadow-sm">
+                  <div className="rounded-2xl bg-white p-3 text-accent shadow-sm">
                     <Icon size={20} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="font-semibold">{notification.message}</p>
-                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-textSecondary">{notification.type}</span>
+                      <p className="font-semibold text-text-primary">{notification.message}</p>
+                      <span className="rounded-full bg-surface-raised px-2 py-1 text-xs text-text-secondary">{notification.type}</span>
                     </div>
-                    <p className="mt-2 text-sm text-textSecondary">{relativeTime(notification.createdAt)}</p>
+                    <p className="mt-2 text-sm text-text-secondary">{relativeTime(notification.createdAt)}</p>
                   </div>
                 </div>
               </Card>
@@ -89,7 +92,7 @@ const NotificationsPage = () => {
           })}
         </div>
       )}
-      {error && <p className="text-sm text-rose-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 };
