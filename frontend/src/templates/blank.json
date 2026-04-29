@@ -1,0 +1,90 @@
+{
+  "settings": {
+    "app_name": "My App",
+    "theme": "light",
+    "default_language": "en",
+    "icon": "Layers",
+    "color": "#6366F1"
+  },
+  "localization": {
+    "en": {
+      "app_name": "My App",
+      "dashboard": "Dashboard",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "search": "Search",
+      "no_data": "No data found",
+      "loading": "Loading...",
+      "notifications": "Notifications",
+      "config_editor": "Config Editor"
+    }
+  },
+  "entities": [
+    {
+      "name": "items",
+      "display_name": "Items",
+      "icon": "List",
+      "fields": [
+        {
+          "name": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true,
+          "placeholder": "Enter title"
+        },
+        {
+          "name": "description",
+          "label": "Description",
+          "type": "textarea",
+          "placeholder": "Enter description"
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "select",
+          "default_value": "active",
+          "options": [
+            { "value": "active", "label": "Active" },
+            { "value": "inactive", "label": "Inactive" }
+          ]
+        }
+      ],
+      "permissions": {
+        "create": true,
+        "read": true,
+        "update": true,
+        "delete": true
+      }
+    }
+  ],
+  "pages": [
+    {
+      "type": "table",
+      "title": "Items",
+      "entity": "items",
+      "columns": ["title", "description", "status"],
+      "filters": ["status"],
+      "actions": ["create", "edit", "delete"]
+    }
+  ],
+  "dashboard": [
+    {
+      "type": "stat",
+      "title": "Total Items",
+      "entity": "items",
+      "aggregation": "count",
+      "icon": "List",
+      "span": 1
+    },
+    {
+      "type": "recent",
+      "title": "Recent Items",
+      "entity": "items",
+      "limit": 5,
+      "span": 2
+    }
+  ]
+}

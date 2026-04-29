@@ -1,0 +1,58 @@
+{
+  "settings": {
+    "app_name": "Task Manager",
+    "theme": "light",
+    "default_language": "en",
+    "icon": "CheckSquare",
+    "color": "#6366F1"
+  },
+  "localization": {
+    "en": {
+      "app_name": "Task Manager",
+      "dashboard": "Dashboard",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "search": "Search",
+      "no_data": "No data found",
+      "loading": "Loading...",
+      "notifications": "Notifications",
+      "config_editor": "Config Editor"
+    }
+  },
+  "entities": [
+    {
+      "name": "tasks",
+      "display_name": "Tasks",
+      "icon": "CheckSquare",
+      "fields": [
+        { "name": "title", "label": "Title", "type": "text", "required": true, "placeholder": "Task title" },
+        { "name": "due_date", "label": "Due Date", "type": "date", "placeholder": "Select due date" },
+        { "name": "status", "label": "Status", "type": "select", "default_value": "todo", "options": [ { "value": "todo", "label": "To Do" }, { "value": "in_progress", "label": "In Progress" }, { "value": "done", "label": "Done" } ] }
+      ],
+      "permissions": { "create": true, "read": true, "update": true, "delete": true }
+    },
+    {
+      "name": "contacts",
+      "display_name": "Contacts",
+      "icon": "Users",
+      "fields": [
+        { "name": "name", "label": "Name", "type": "text", "required": true, "placeholder": "Contact name" },
+        { "name": "email", "label": "Email", "type": "email", "placeholder": "Email address" },
+        { "name": "phone", "label": "Phone", "type": "phone", "placeholder": "Phone number" }
+      ],
+      "permissions": { "create": true, "read": true, "update": true, "delete": true }
+    }
+  ],
+  "pages": [
+    { "type": "table", "title": "Tasks", "entity": "tasks", "columns": ["title", "due_date", "status"], "filters": ["status"], "actions": ["create", "edit", "delete"] },
+    { "type": "table", "title": "Contacts", "entity": "contacts", "columns": ["name", "email", "phone"], "filters": [], "actions": ["create", "edit", "delete"] }
+  ],
+  "dashboard": [
+    { "type": "stat", "title": "Open Tasks", "entity": "tasks", "aggregation": "count", "icon": "CheckSquare", "span": 1 },
+    { "type": "chart", "title": "Tasks by Status", "entity": "tasks", "group_by": "status", "span": 2 },
+    { "type": "recent", "title": "Recent Contacts", "entity": "contacts", "limit": 5, "span": 1 }
+  ]
+}

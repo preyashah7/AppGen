@@ -1,0 +1,70 @@
+{
+  "settings": {
+    "app_name": "Restaurant Dashboard",
+    "theme": "light",
+    "default_language": "en",
+    "icon": "Coffee",
+    "color": "#6366F1"
+  },
+  "localization": {
+    "en": {
+      "app_name": "Restaurant Dashboard",
+      "dashboard": "Dashboard",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "search": "Search",
+      "no_data": "No data found",
+      "loading": "Loading...",
+      "notifications": "Notifications",
+      "config_editor": "Config Editor"
+    }
+  },
+  "entities": [
+    {
+      "name": "menu_items",
+      "display_name": "Menu Items",
+      "icon": "Coffee",
+      "fields": [
+        { "name": "name", "label": "Name", "type": "text", "required": true, "placeholder": "Item name" },
+        { "name": "price", "label": "Price", "type": "number", "required": true, "placeholder": "Item price" },
+        { "name": "category", "label": "Category", "type": "select", "options": [ { "value": "drinks", "label": "Drinks" }, { "value": "food", "label": "Food" }, { "value": "dessert", "label": "Dessert" } ] }
+      ],
+      "permissions": { "create": true, "read": true, "update": true, "delete": true }
+    },
+    {
+      "name": "orders",
+      "display_name": "Orders",
+      "icon": "ShoppingCart",
+      "fields": [
+        { "name": "customer", "label": "Customer", "type": "text", "required": true, "placeholder": "Customer name" },
+        { "name": "item", "label": "Item", "type": "text", "required": true, "placeholder": "Ordered item" },
+        { "name": "status", "label": "Status", "type": "select", "default_value": "pending", "options": [ { "value": "pending", "label": "Pending" }, { "value": "served", "label": "Served" }, { "value": "cancelled", "label": "Cancelled" } ] }
+      ],
+      "permissions": { "create": true, "read": true, "update": true, "delete": true }
+    },
+    {
+      "name": "reservations",
+      "display_name": "Reservations",
+      "icon": "Calendar",
+      "fields": [
+        { "name": "guest_name", "label": "Guest Name", "type": "text", "required": true, "placeholder": "Guest name" },
+        { "name": "date", "label": "Date", "type": "date", "required": true },
+        { "name": "party_size", "label": "Party Size", "type": "number", "required": true, "placeholder": "Number of guests" }
+      ],
+      "permissions": { "create": true, "read": true, "update": true, "delete": true }
+    }
+  ],
+  "pages": [
+    { "type": "table", "title": "Menu Items", "entity": "menu_items", "columns": ["name", "price", "category"], "filters": ["category"], "actions": ["create", "edit", "delete"] },
+    { "type": "table", "title": "Orders", "entity": "orders", "columns": ["customer", "item", "status"], "filters": ["status"], "actions": ["create", "edit", "delete"] },
+    { "type": "table", "title": "Reservations", "entity": "reservations", "columns": ["guest_name", "date", "party_size"], "filters": ["date"], "actions": ["create", "edit", "delete"] }
+  ],
+  "dashboard": [
+    { "type": "stat", "title": "Menu Items", "entity": "menu_items", "aggregation": "count", "icon": "Coffee", "span": 1 },
+    { "type": "chart", "title": "Orders by Status", "entity": "orders", "group_by": "status", "span": 2 },
+    { "type": "recent", "title": "Recent Reservations", "entity": "reservations", "limit": 5, "span": 1 }
+  ]
+}

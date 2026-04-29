@@ -1,0 +1,41 @@
+# Node
+node_modules/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Vite / Cache / Misc
+.cache/
+.vite/
+
+# Temporary
+tmp/
+
+# Lockfiles (do not ignore package-lock.json or yarn.lock if you want to commit them)
+# If you use pnpm, you might want to keep pnpm-lock.yaml committed.
