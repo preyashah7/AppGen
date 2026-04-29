@@ -2,6 +2,7 @@ import express from 'express';
 import { authenticateToken } from '../middleware/auth';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
+import { serverError, notFoundError } from '../utils/errorFormat';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -121,14 +122,14 @@ router.post('/', async (req: any, res) => {
     });
     res.json(app);
   } catch (error) {
-    res.status(500).json({ error: 'Unable to create app' });
+    res.status(500).json(serverError(error, 'Failed to create app'));
   }
 });
 
 router.delete('/:appId', async (req: any, res) => {
   const { appId } = req.params;
   const app = await prisma.app.findFirst({ where: { id: appId, userId: req.user.id } });
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
   await prisma.app.delete({ where: { id: appId } });
   res.json({ success: true });
 });
@@ -138,7 +139,7 @@ router.post('/:appId/export/github', async (req: any, res) => {
   const { username, repo, token, filePath } = req.body;
 
   const app = await prisma.app.findFirst({ where: { id: appId, userId: req.user.id } });
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   try {
     const config = JSON.parse(app.config);
@@ -176,7 +177,7 @@ router.post('/:appId/export/github', async (req: any, res) => {
     const errorMessage = axios.isAxiosError(error)
       ? error.response?.data?.message || 'GitHub API error'
       : 'GitHub API error';
-    res.status(400).json({ error: errorMessage });
+    res.status(400).json(serverError(error, `GitHub export failed: ${errorMessage}`));
   }
 });
 

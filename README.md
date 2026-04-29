@@ -90,8 +90,56 @@ npm run build
 ## Deployment notes
 
 - Use environment variables (secrets) from your deployment platform.
-- Use a managed database (Postgres, MySQL) for production and run `prisma migrate deploy` as part of your release pipeline.
+- Use a managed database (Postgres preferred) for production and sync schema using `npx prisma db push` in the deployment pipeline.
 - Secure `JWT_SECRET` and any tokens; rotate them if leaked.
+
+### Deploy Backend on Render
+
+1. Create a new Web Service on Render from this repository.
+2. Set the root directory to `backend`.
+3. Use these commands:
+
+```bash
+Build Command: npm install && npx prisma generate && npx prisma db push && npm run build
+Start Command: npm run start
+```
+
+4. Set environment variables in Render:
+
+```bash
+NODE_VERSION=20
+PORT=3001
+JWT_SECRET=<strong-random-secret>
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=<render-postgres-internal-url>
+CORS_ORIGIN=<your-vercel-url>
+```
+
+5. Verify health endpoint after deploy:
+
+```bash
+https://<your-render-service>.onrender.com/health
+```
+
+### Deploy Frontend on Vercel
+
+1. Import this repository into Vercel.
+2. Keep project root at repository root; `vercel.json` will build `frontend` and publish `frontend/dist`.
+3. Set environment variable in Vercel:
+
+```bash
+VITE_API_BASE_URL=https://<your-render-service>.onrender.com
+```
+
+4. Deploy and open your Vercel URL.
+5. Update Render `CORS_ORIGIN` with the exact Vercel URL and redeploy Render if needed.
+
+### Order of Deployment
+
+1. Deploy Render backend first and copy its URL.
+2. Deploy Vercel frontend with `VITE_API_BASE_URL` set to that backend URL.
+3. Set Render `CORS_ORIGIN` to the final Vercel URL.
+4. Re-test login, app list, dashboard, record CRUD, CSV import, and notifications.
 
 ## Testing
 

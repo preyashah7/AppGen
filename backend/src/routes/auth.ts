@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { serverError } from '../utils/errorFormat';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -19,7 +20,7 @@ router.post('/signup', async (req, res) => {
     const token = jwt.sign({ id: user.id }, JWT_SECRET);
     res.json({ token, user });
   } catch (error) {
-    res.status(400).json({ error: 'Email already exists' });
+    res.status(400).json(serverError(error, 'Signup failed - email may already exist'));
   }
 });
 

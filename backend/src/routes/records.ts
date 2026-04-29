@@ -1,6 +1,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { serverError, notFoundError, csvImportError } from '../utils/errorFormat';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -24,7 +25,7 @@ router.use(authenticateToken);
 router.get('/:appId/records/:entity', async (req: any, res) => {
   const { appId, entity } = req.params;
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   const search = String(req.query.search || '').trim().toLowerCase();
   const page = Number(req.query.page || 1);
@@ -96,17 +97,17 @@ router.post('/:appId/records/:entity', async (req: any, res) => {
 
     res.json(parseRecord(created));
   } catch (error) {
-    res.status(500).json({ error: 'Unable to create record' });
+    res.status(500).json(serverError(error, `Failed to create ${entity} record`));
   }
 });
 
 router.put('/:appId/records/:entity/:recordId', async (req: any, res) => {
   const { appId, entity, recordId } = req.params;
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   const record = await prisma.record.findFirst({ where: { id: recordId, appId, entity } });
-  if (!record) return res.status(404).json({ error: 'Record not found' });
+  if (!record) return res.status(404).json(notFoundError('Record'));
 
   const data = req.body || {};
 
@@ -117,17 +118,17 @@ router.put('/:appId/records/:entity/:recordId', async (req: any, res) => {
     });
     res.json(parseRecord(updated));
   } catch (error) {
-    res.status(500).json({ error: 'Unable to update record' });
+    res.status(500).json(serverError(error, `Failed to update ${entity} record`));
   }
 });
 
 router.delete('/:appId/records/:entity/:recordId', async (req: any, res) => {
   const { appId, entity, recordId } = req.params;
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   const record = await prisma.record.findFirst({ where: { id: recordId, appId, entity } });
-  if (!record) return res.status(404).json({ error: 'Record not found' });
+  if (!record) return res.status(404).json(notFoundError('Record'));
 
   await prisma.record.delete({ where: { id: recordId } });
   await prisma.notification.create({
@@ -145,10 +146,10 @@ router.post('/:appId/records/:entity/import', async (req: any, res) => {
   const { records } = req.body;
 
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   if (!Array.isArray(records)) {
-    return res.status(400).json({ error: 'Records must be an array' });
+    return res.status(400).json(csvImportError('Records must be an array'));
   }
 
   const results = [];

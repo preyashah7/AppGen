@@ -1,11 +1,52 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { useApp } from '../context/AppContext.jsx';
 import Button from '../components/ui/Button.jsx';
 import Card from '../components/ui/Card.jsx';
-import { FileText, CheckCircle, XCircle, RotateCcw, Save, Github } from 'lucide-react';
+import Input from '../components/ui/Input.jsx';
+import Modal from '../components/ui/Modal.jsx';
+import { FileText, CheckCircle, XCircle, RotateCcw, Save, Github, Plus, Wand2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import GitHubExportModal from '../components/GitHubExportModal.jsx';
+
+const FIELD_TYPES = ['text', 'textarea', 'select', 'checkbox', 'email', 'number', 'date', 'url', 'phone'];
+
+const createEntityTemplate = (name) => ({
+  name,
+  display_name: name
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' '),
+  icon: 'List',
+  fields: [],
+  permissions: {
+    create: true,
+    read: true,
+    update: true,
+    delete: true,
+  },
+});
+
+const createFieldTemplate = ({ name, label, type }) => {
+  const field = {
+    name,
+    label,
+    type,
+  };
+
+  if (type === 'select') {
+    field.options = [
+      { value: 'option_1', label: 'Option 1' },
+      { value: 'option_2', label: 'Option 2' },
+    ];
+  }
+
+  if (type === 'checkbox') {
+    field.placeholder = 'Toggle on or off';
+  }
+
+  return field;
+};
 
 const ConfigEditor = () => {
   const { config, setConfig, t, appId } = useApp();
@@ -13,8 +54,23 @@ const ConfigEditor = () => {
   const [isValid, setIsValid] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showGitHubModal, setShowGitHubModal] = useState(false);
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [builderEntity, setBuilderEntity] = useState('');
+  const [builderName, setBuilderName] = useState('');
+  const [builderLabel, setBuilderLabel] = useState('');
+  const [builderType, setBuilderType] = useState('text');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const initialJsonRef = useRef('');
+
+  const parsedConfig = useMemo(() => {
+    if (!isValid) return null;
+    try {
+      return JSON.parse(jsonText);
+    } catch {
+      return null;
+    }
+  }, [jsonText, isValid]);
 
   useEffect(() => {
     const initialJson = JSON.stringify(config || {}, null, 2);
@@ -37,6 +93,48 @@ const ConfigEditor = () => {
     setJsonText(value);
     validateJson(value);
     setHasUnsavedChanges(value !== initialJsonRef.current);
+    setSaveError(null);
+  };
+
+  const updateEditorJson = (nextConfig) => {
+    const formatted = JSON.stringify(nextConfig, null, 2);
+    setJsonText(formatted);
+    setIsValid(true);
+    setHasUnsavedChanges(formatted !== initialJsonRef.current);
+    setSaveError(null);
+  };
+
+  const handleAddEntity = () => {
+    if (!parsedConfig) return;
+    const nextConfig = {
+      ...parsedConfig,
+      entities: [...(parsedConfig.entities || []), createEntityTemplate('new_entity')],
+      pages: parsedConfig.pages || [],
+      dashboard: parsedConfig.dashboard || [],
+    };
+    updateEditorJson(nextConfig);
+    toast.success('Entity template added to config');
+  };
+
+  const handleAddField = () => {
+    if (!parsedConfig || !builderEntity || !builderName || !builderLabel) return;
+    const nextConfig = {
+      ...parsedConfig,
+      entities: (parsedConfig.entities || []).map((entity) => {
+        if (entity.name !== builderEntity) return entity;
+        return {
+          ...entity,
+          fields: [...(entity.fields || []), createFieldTemplate({ name: builderName, label: builderLabel, type: builderType })],
+        };
+      }),
+    };
+    updateEditorJson(nextConfig);
+    setShowBuilder(false);
+    setBuilderEntity('');
+    setBuilderName('');
+    setBuilderLabel('');
+    setBuilderType('text');
+    toast.success('Field template added to config');
   };
 
   const handleFormat = () => {
@@ -54,6 +152,7 @@ const ConfigEditor = () => {
   const handleSave = async () => {
     if (!isValid) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const parsed = JSON.parse(jsonText);
       await setConfig(parsed);
@@ -61,7 +160,24 @@ const ConfigEditor = () => {
       setHasUnsavedChanges(false);
       toast.success('Config saved successfully');
     } catch (err) {
-      toast.error('Failed to save config');
+      const apiError = err?.response?.data;
+      const validationFields = apiError?.fields || apiError?.errors || apiError?.details || [];
+      if (apiError?.code === 'VALIDATION_ERROR' && Array.isArray(validationFields)) {
+        setSaveError({
+          code: apiError.code,
+          message: apiError.message || 'Config validation failed',
+          fields: validationFields,
+        });
+        toast.error(apiError.message || 'Failed to save config');
+      } else {
+        const fallbackMessage = apiError?.message || err?.message || 'Failed to save config';
+        setSaveError({
+          code: apiError?.code || 'SAVE_FAILED',
+          message: fallbackMessage,
+          fields: validationFields,
+        });
+        toast.error(fallbackMessage);
+      }
     } finally {
       setSaving(false);
     }
@@ -100,6 +216,16 @@ const ConfigEditor = () => {
               {isValid ? 'Valid JSON' : 'Invalid JSON'}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
+              <Button onClick={handleAddEntity} disabled={!parsedConfig} variant="secondary" size="sm" className="w-full sm:w-auto">
+                <Plus size={16} className="mr-2" />
+                Add Entity
+              </Button>
+              <Button onClick={() => setShowBuilder(true)} disabled={!parsedConfig || !parsedConfig.entities?.length} variant="secondary" size="sm" className="w-full sm:w-auto">
+                <Wand2 size={16} className="mr-2" />
+                Add Field
+              </Button>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
               <Button onClick={handleFormat} disabled={!isValid} variant="secondary" size="sm" className="w-full sm:w-auto">
                 <RotateCcw size={16} className="mr-2" />
                 Format
@@ -115,6 +241,21 @@ const ConfigEditor = () => {
             </div>
           </div>
         </div>
+        {saveError && (
+          <div className="mx-1 mt-4 rounded-2xl border border-danger/20 bg-danger-light p-4 text-sm text-danger sm:mx-0">
+            <p className="font-semibold">{saveError.message}</p>
+            <p className="mt-1 text-xs text-danger/80">Code: {saveError.code}</p>
+            {Array.isArray(saveError.fields) && saveError.fields.length > 0 && (
+              <div className="mt-3 space-y-2 text-xs text-danger/90">
+                {saveError.fields.map((fieldError) => (
+                  <div key={`${fieldError.field}-${fieldError.message}`} className="rounded-lg bg-white/80 px-3 py-2">
+                    <span className="font-semibold">{fieldError.field}</span>: {fieldError.message}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </Card>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -206,6 +347,55 @@ const ConfigEditor = () => {
           config={config}
           onClose={() => setShowGitHubModal(false)}
         />
+      )}
+
+      {showBuilder && (
+        <Modal
+          title="Add Field"
+          open={showBuilder}
+          onClose={() => setShowBuilder(false)}
+          footer={(
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" onClick={() => setShowBuilder(false)} className="w-full sm:w-auto">Cancel</Button>
+              <Button onClick={handleAddField} className="w-full sm:w-auto">Insert Field</Button>
+            </div>
+          )}
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Entity</label>
+                <select
+                  value={builderEntity}
+                  onChange={(e) => setBuilderEntity(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                >
+                  <option value="">Select entity</option>
+                  {(parsedConfig?.entities || []).map((entity) => (
+                    <option key={entity.name} value={entity.name}>{entity.display_name || entity.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-text-secondary">Field type</label>
+                <select
+                  value={builderType}
+                  onChange={(e) => setBuilderType(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                >
+                  {FIELD_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <Input label="Field name" value={builderName} onChange={(e) => setBuilderName(e.target.value)} placeholder="e.g. price" />
+            <Input label="Field label" value={builderLabel} onChange={(e) => setBuilderLabel(e.target.value)} placeholder="e.g. Price" />
+            <p className="text-xs text-text-muted">
+              This inserts a ready-to-edit field template into the selected entity.
+            </p>
+          </div>
+        </Modal>
       )}
     </div>
   );

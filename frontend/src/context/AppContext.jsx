@@ -66,7 +66,7 @@ export const AppProvider = ({ children }) => {
       await fetchNotifications();
       return res.data;
     } catch (err) {
-      throw new Error('Unable to save configuration.');
+      throw err;
     }
   };
 

@@ -1,6 +1,8 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { validateConfig, detectMigrations } from '../utils/configValidator';
+import { validationError, serverError, notFoundError } from '../utils/errorFormat';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -14,7 +16,7 @@ const getAppForUser = async (appId: string, userId: string) => {
 router.get('/:appId/config', async (req: any, res) => {
   const { appId } = req.params;
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
   try {
     const config = JSON.parse(app.config || '{}');
@@ -28,25 +30,30 @@ router.put('/:appId/config', async (req: any, res) => {
   const { appId } = req.params;
   const { config } = req.body;
   const app = await getAppForUser(appId, req.user.id);
-  if (!app) return res.status(404).json({ error: 'App not found' });
+  if (!app) return res.status(404).json(notFoundError('App'));
 
-  if (typeof config !== 'object' || config === null) {
-    return res.status(400).json({ error: 'Config must be a valid object' });
+  // Validate config schema
+  const errors = validateConfig(config);
+  if (errors.length > 0) {
+    return res.status(400).json(validationError(errors));
   }
 
   try {
+    const oldConfig = app.config ? JSON.parse(app.config) : {};
+    const migrations = detectMigrations(oldConfig, config);
+
     const configString = JSON.stringify(config);
     await prisma.notification.create({
       data: {
         appId,
-        message: 'Configuration was updated',
+        message: `Configuration was updated${migrations.length > 0 ? ` with ${migrations.length} migration(s)` : ''}`,
         type: 'config_updated',
       },
     });
     await prisma.app.update({ where: { id: appId }, data: { config: configString } });
-    res.json({ success: true, config });
+    res.json({ success: true, config, migrations });
   } catch (error) {
-    res.status(500).json({ error: 'Unable to save config' });
+    res.status(500).json(serverError(error, 'Failed to save config'));
   }
 });
 
