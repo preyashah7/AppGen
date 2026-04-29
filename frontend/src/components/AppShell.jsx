@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { Layers, LayoutDashboard, List, Settings, Bell, ArrowLeft, Menu, ChevronDown, Check } from 'lucide-react';
+import { Layers, LayoutDashboard, List, Settings, Bell, ArrowLeft, Menu, ChevronDown, Check, LogOut } from 'lucide-react';
 
 const iconMap = {
   Layers,
@@ -63,6 +63,13 @@ const AppShell = () => {
 
   const settings = config?.settings || {};
   const entities = config?.entities || [];
+
+  const handleLogout = () => {
+    setMenuOpen(false);
+    setLanguageMenuOpen(false);
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const pageTitle = () => {
     if (location.pathname.includes('/dashboard')) return t('dashboard');
@@ -154,13 +161,23 @@ const AppShell = () => {
             )}
           </button>
 
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-sm text-text-secondary transition-colors hover:bg-surface-raised hover:text-text-primary"
+            onClick={handleLogout}
+            aria-label="Logout"
+          >
+            <LogOut size={14} />
+            <span>Logout</span>
+          </button>
+
           <div className="relative">
             <button
               className="flex w-9 h-9 items-center justify-center rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover transform transition duration-150 hover:scale-105"
               onClick={() => setMenuOpen((open) => !open)}
               aria-label="User menu"
             >
-              {user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()}
+              {user?.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'U'}
             </button>
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-surface shadow-dropdown p-2">
@@ -179,8 +196,7 @@ const AppShell = () => {
                   <button
                     className="w-full text-left rounded-lg px-3 py-2 text-sm text-text-secondary hover:bg-surface-raised hover:text-text-primary"
                     onClick={() => {
-                      setMenuOpen(false);
-                      logout();
+                      handleLogout();
                     }}
                   >
                     Logout

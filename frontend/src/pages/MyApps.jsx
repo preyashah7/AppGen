@@ -32,6 +32,11 @@ const MyApps = () => {
     }
   }, [loading, isAuthenticated, navigate]);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   const fetchApps = async () => {
     try {
       const res = await axios.get('/api/apps');
@@ -71,13 +76,21 @@ const MyApps = () => {
         </div>
 
         <div className="flex items-center">
+          <button
+            onClick={handleLogout}
+            className="mr-3 inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7EC] px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            type="button"
+          >
+            <LogOut size={14} />
+            Logout
+          </button>
           <div className="text-[13px] text-gray-500 mr-3">{user?.name}</div>
           <details className="relative">
             <summary className="list-none">
               <div className="w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-medium flex items-center justify-center">{(user?.name || 'PS').split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
             </summary>
             <div className="absolute right-0 mt-2 w-40 rounded-md border border-[#E4E7EC] bg-white shadow-sm py-1">
-              <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 <LogOut size={14} /> Logout
               </button>
             </div>

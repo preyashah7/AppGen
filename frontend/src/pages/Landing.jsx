@@ -1,8 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Layers, Database, BarChart3 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const Landing = () => {
+  const { isAuthenticated, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-[linear-gradient(135deg,#FAFBFF_0%,#F0F4FF_50%,#FAFBFF_100%)] text-text-primary">
       <div className="sticky top-0 z-40 border-b border-border bg-white/80 backdrop-blur-md">
@@ -14,13 +17,30 @@ const Landing = () => {
             AppGen
           </Link>
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary">
-              Login
-            </Link>
-            <Link to="/signup" className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover hover:-translate-y-px transition-all duration-150">
-              Get Started
-              <ArrowRight size={16} />
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Link to="/apps" className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary">
+                  My Apps
+                </Link>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-4 py-2 text-sm font-medium text-text-secondary transition-all duration-150 hover:border-border-strong hover:bg-surface-raised hover:text-text-primary"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-surface-raised hover:text-text-primary">
+                  Login
+                </Link>
+                <Link to="/signup" className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover hover:-translate-y-px transition-all duration-150">
+                  Get Started
+                  <ArrowRight size={16} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

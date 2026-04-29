@@ -23,7 +23,7 @@ const icons = [
 const colors = ['#4F46E5', '#7C3AED', '#DB2777', '#059669', '#D97706', '#DC2626', '#2563EB', '#0891B2'];
 
 const NewApp = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { user, logout, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', description: '', icon: 'Layers', color: '#6366F1' });
   const [selectedTemplate, setSelectedTemplate] = useState('task-manager');
@@ -35,6 +35,11 @@ const NewApp = () => {
       navigate('/login');
     }
   }, [loading, isAuthenticated, navigate]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,13 +84,15 @@ const NewApp = () => {
         </div>
 
         <div className="flex items-center">
-          <div className="text-[13px] text-gray-500 mr-3">{ /* placeholder for user name */ }</div>
+          <div className="text-[13px] text-gray-500 mr-3">{user?.name}</div>
           <details className="relative">
             <summary className="list-none">
-              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-medium flex items-center justify-center">PS</div>
+              <div className="w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-medium flex items-center justify-center">
+                {(user?.name || 'U').split(' ').map(n => n[0]).slice(0, 2).join('')}
+              </div>
             </summary>
             <div className="absolute right-0 mt-2 w-40 rounded-md border border-[#E4E7EC] bg-white shadow-sm py-1">
-              <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+              <button onClick={handleLogout} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                 <LogOut size={14} /> Logout
               </button>
             </div>
