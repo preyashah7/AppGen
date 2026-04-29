@@ -110,7 +110,6 @@ Start Command: npm run start
 NODE_VERSION=20
 PORT=3001
 JWT_SECRET=<strong-random-secret>
-DATABASE_PROVIDER=postgresql
 DATABASE_URL=<render-postgres-internal-url>
 CORS_ORIGIN=<your-vercel-url>
 ```
@@ -124,7 +123,7 @@ https://<your-render-service>.onrender.com/health
 ### Deploy Frontend on Vercel
 
 1. Import this repository into Vercel.
-2. Keep project root at repository root; `vercel.json` will build `frontend` and publish `frontend/dist`.
+2. `vercel.json` auto-detects if `frontend` is the root or a subfolder and publishes `dist`.
 3. Set environment variable in Vercel:
 
 ```bash
