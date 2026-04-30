@@ -101,6 +101,7 @@ const Signup = () => {
                 type="password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                autoComplete="current-password"
                 required
               />
               {error && <p className="rounded-lg border border-danger/20 bg-danger-light px-3 py-2 text-sm text-danger">{error}</p>}

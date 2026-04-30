@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext.jsx';
 import Card from '../components/ui/Card.jsx';
 import Button from '../components/ui/Button.jsx';
@@ -30,6 +31,22 @@ const Login = () => {
       navigate('/apps');
     } catch (err) {
       setError(err.response?.data?.error || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post('/api/auth/google', {
+        token: credentialResponse.credential,
+      });
+      login(res.data.token, res.data.user);
+      navigate('/apps');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Google sign-in failed');
     } finally {
       setLoading(false);
     }
@@ -95,6 +112,7 @@ const Login = () => {
                 type="password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                autoComplete="current-password"
                 required
               />
               {error && <p className="rounded-lg border border-danger/20 bg-danger-light px-3 py-2 text-sm text-danger">{error}</p>}
@@ -102,6 +120,24 @@ const Login = () => {
                 Login
                 <ArrowRight size={16} />
               </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/50"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-white px-2 text-text-secondary">or continue with</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => setError('Google sign-in failed')}
+                  locale="en"
+                  size="large"
+                />
+              </div>
             </form>
 
             <p className="mt-6 text-center text-sm text-text-secondary">
