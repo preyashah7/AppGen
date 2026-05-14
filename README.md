@@ -1,64 +1,120 @@
 # AppGen
 
-AppGen is a low-code app generator and administration UI that lets you configure entities, pages, and dashboards and then manage records in a hosted or local environment.
+AppGen is a config-driven app generator for building internal tools, admin panels, and lightweight business apps without hand-coding each screen. Instead of starting from a blank frontend, you define an app with JSON configuration and AppGen turns that into working pages for dashboards, record management, and operational workflows.
 
-This repository contains two main parts:
+It is designed for teams that need to move quickly on data-heavy products such as task trackers, restaurant back offices, CRM-like panels, inventory apps, and custom admin dashboards.
 
-- `backend/` — Node + TypeScript API, Prisma schema and migrations, business logic and API routes.
-- `frontend/` — Vite + React UI for the admin console and app runtime.
+## What AppGen Does
 
-## Key Features
+AppGen lets you:
 
-- Dynamic entity configuration via `config.json` and admin UI
-- CSV import/export for records
-- Built-in authentication + multi-tenant app support
-- Dashboard widgets and CRUD UI generated from config
+- create a new app from a template or from scratch
+- define entities, fields, pages, and dashboard widgets through config
+- manage records with generated CRUD screens
+- import and export records as CSV
+- view app metrics and recent activity on a live dashboard
+- update app structure without rebuilding the whole frontend
+- keep everything behind user authentication and app-level navigation
 
----
+## Product Flow
 
-## Prerequisites
+The product experience is intentionally simple:
 
-- Node 18+ (recommended)
-- npm or yarn
-- PostgreSQL (or other database) for production; SQLite works for local testing via Prisma
-- Git (for code and migration history)
+1. Create an app and choose a starting template.
+2. Customize the app config with entities, fields, and pages.
+3. Use the generated UI to create, edit, and review records.
+4. Add dashboard widgets to summarize the most important activity.
+5. Export or import data when you need to move information in and out of the system.
 
-## Quickstart (development)
+## How It Is Structured
 
-Clone the repo and run backend + frontend in parallel.
+The repository is split into two main parts:
+
+- [backend/](backend) is the Node + TypeScript API that handles auth, app management, configuration, records, and notifications.
+- [frontend/](frontend) is the Vite + React app that powers the landing page, app builder, generated runtime, and admin experience.
+
+The backend uses Prisma for database access and migrations. The frontend renders the app experience from configuration rather than hardcoded screens.
+
+## Key Capabilities
+
+- config-first app generation
+- dynamic entity and field definitions
+- dashboard widgets for stats, charts, and recent records
+- CSV import/export support
+- login and signup flows
+- app creation from templates such as task manager, restaurant dashboard, and blank starter apps
+- GitHub export for app configuration
+- notification pages for app activity
+
+## Tech Stack
+
+- Frontend: React, Vite, Tailwind CSS, Monaco Editor, Recharts
+- Backend: Node.js, Express, TypeScript, Prisma
+- Data: relational database via Prisma datasource configuration
+
+## Deployment
+
+The project is set up for a split deployment:
+
+- backend on Render
+- frontend on Vercel
+- environment-driven API URL and CORS configuration
+
+The repository includes `render.yaml` and `vercel.json` to help with deployment setup.
+
+## Run It Locally
+
+Prerequisites:
+
+- Node 18+ recommended
+- npm
+- a database for the backend, with PostgreSQL recommended for production and local Prisma support for development
+
+### 1. Backend
 
 ```bash
-# from project root (this README location)
 cd backend
 npm install
-# create a .env based on .env.example (see backend folder)
-npm run dev
-
-# in another terminal
-cd frontend
-npm install
-npm run dev
 ```
 
-Open the UI at `http://localhost:5173` (or the port shown by Vite).
+Create `backend/.env` from `backend/.env.example` and set values such as:
 
-### Environment variables
-
-Create `.env` files for each service (do not commit secrets):
-
-- `backend/.env` should contain database URL and any auth/secret keys, example:
-
-```
+```bash
 DATABASE_URL="postgresql://user:pass@localhost:5432/appgen"
 JWT_SECRET=your_jwt_secret_here
-PORT=5174
+PORT=3001
 ```
 
-- `frontend/.env` may contain API base URL if needed (e.g. `VITE_API_BASE_URL=http://localhost:5174`).
+Start the API:
 
-## Database migrations (Prisma)
+```bash
+npm run dev
+```
 
-After making schema changes run:
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env` if you need a custom API base URL:
+
+```bash
+VITE_API_BASE_URL=http://localhost:3001
+```
+
+Start the UI:
+
+```bash
+npm run dev
+```
+
+Open the app in the browser at the Vite URL shown in the terminal, usually `http://localhost:5173`.
+
+## Database Migrations
+
+When you change the schema, run Prisma migrations from the backend folder:
 
 ```bash
 cd backend
@@ -66,16 +122,15 @@ npx prisma migrate dev --name "your_migration_name"
 npx prisma generate
 ```
 
-For production use `prisma migrate deploy`.
+For production deployments, use `prisma migrate deploy` or the deployment pipeline configured for your host.
 
-## Building for production
+## Build For Production
 
 Backend:
 
 ```bash
 cd backend
 npm run build
-# start the built server
 npm start
 ```
 
@@ -84,82 +139,22 @@ Frontend:
 ```bash
 cd frontend
 npm run build
-# serve the `dist` folder with a static server or integrate into your backend
 ```
 
-## Deployment notes
+## Troubleshooting
 
-- Use environment variables (secrets) from your deployment platform.
-- Use a managed database (Postgres preferred) for production and sync schema using `npx prisma db push` in the deployment pipeline.
-- Secure `JWT_SECRET` and any tokens; rotate them if leaked.
-
-### Deploy Backend on Render
-
-1. Create a new Web Service on Render from this repository.
-2. Set the root directory to `backend`.
-3. Use these commands:
-
-```bash
-Build Command: npm install && npx prisma generate && npx prisma db push && npm run build
-Start Command: npm run start
-```
-
-4. Set environment variables in Render:
-
-```bash
-NODE_VERSION=20
-PORT=3001
-JWT_SECRET=<strong-random-secret>
-DATABASE_URL=<render-postgres-internal-url>
-CORS_ORIGIN=<your-vercel-url>
-```
-
-5. Verify health endpoint after deploy:
-
-```bash
-https://<your-render-service>.onrender.com/health
-```
-
-### Deploy Frontend on Vercel
-
-1. Import this repository into Vercel.
-2. `vercel.json` auto-detects if `frontend` is the root or a subfolder and publishes `dist`.
-3. Set environment variable in Vercel:
-
-```bash
-VITE_API_BASE_URL=https://<your-render-service>.onrender.com
-```
-
-4. Deploy and open your Vercel URL.
-5. Update Render `CORS_ORIGIN` with the exact Vercel URL and redeploy Render if needed.
-
-### Order of Deployment
-
-1. Deploy Render backend first and copy its URL.
-2. Deploy Vercel frontend with `VITE_API_BASE_URL` set to that backend URL.
-3. Set Render `CORS_ORIGIN` to the final Vercel URL.
-4. Re-test login, app list, dashboard, record CRUD, CSV import, and notifications.
+- If the frontend cannot reach the API, confirm `VITE_API_BASE_URL` and the backend `CORS_ORIGIN` value.
+- If Prisma migrations fail, confirm the database connection string and that the database user has permission to create tables and schemas.
 
 ## Testing
 
-If there are tests, run them from the respective package folders:
+Run tests from the package folders if they are available:
 
 ```bash
 cd backend && npm test
 cd frontend && npm test
 ```
 
-## Troubleshooting
-
-- If the frontend can't reach the API, confirm `VITE_API_BASE_URL` or same-origin proxy in Vite config.
-- If migrations fail, ensure the database URL is correct and the user has permission to create schemas/tables.
-
-## Contributing
-
-- Keep migrations in `backend/prisma/migrations` for schema history.
-- Run linting and tests before opening a PR.
-- Describe breaking changes in the PR description.
-
 ## License
 
-This project is provided as-is; add your preferred license in this README or in a `LICENSE` file.
+This project is provided as-is. Add your preferred license file if you plan to publish or distribute it.
